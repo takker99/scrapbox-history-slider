@@ -105,71 +105,7 @@ const App = ({ controller }: Props) => {
   return (
     <>
       <style>
-        {`:host {
-          color: var(--page-text-color, #4a4a4a);
-        }
-        .background {
-          position: fixed;
-          top: 0;
-          right: 0;
-          left: 0;
-          bottom: 0;
-          outline: 0;
-          background-color: black;
-          opacity: 0.8;
-          z-index: 1040;
-        }
-        .content {
-          position: fixed;
-          top: 0;
-          right: 0;
-          left: 0;
-          bottom: 0;
-          outline: 0;
-          z-index: 1050;
-        }
-        .modal {
-          position: relative;
-          margin: 30px auto;
-          width: 80vw;
-          max-height: calc(100vh - 60px);
-          display: flex;
-          flex-direction: column;
-        }
-        .container {
-          width:100%;
-          paddding: 5px;
-          background-color: var(--page-bg, #fefefe);
-          border-radius: 4px;
-          border: 2px solid var(--body-bg, #dcdde0);
-        }
-        .modal > * {
-          margin: 0.5em 0;
-        }
-        .controller {
-          display: flex;
-          align-content:  center;
-        }
-        .controller > * {
-          margin: auto 2px;
-        }
-        input {
-          width: 100%;
-        }
-        .not-found {
-          width: 100%;
-        }
-        .viewer {
-          overflow-y: auto;
-          overflow-x: hidden;
-        }
-        pre {
-          width: 100%;
-          font-family: var(--history-slider-pre-font, Menlo,Monaco,Consolas,"Courier New",monospace);
-          word-break: break-all;
-          word-wrap: break-word;
-          white-space: pre-wrap;
-        }`}
+        {':host{color:var(--page-text-color, #4a4a4a)}.background{position:fixed;inset:0;outline:0;background-color:#000;opacity:.8;z-index:1040}.content{position:fixed;inset:0;outline:0;z-index:1050}.modal{position:relative;width:80vw;margin:10px;max-height:calc(100vh - 20px);display:flex;flex-direction:column}@media (min-width: 768px){.modal{margin:30px auto;max-height:calc(100vh - 60px)}}.container{width:100%;padding:5px;background-color:var(--page-bg, #fefefe);border-radius:4px;border:2px solid var(--body-bg, #dcdde0)}.modal>*{margin:.5em 0}.controller{display:flex;align-content:center}.controller>*{margin:auto 2px}input,.not-found{width:100%}.viewer{overflow-y:auto;overflow-x:hidden}pre{width:100%;font-family:var(--history-slider-pre-font, Menlo,Monaco,Consolas,"Courier New",monospace);word-break:break-all;word-wrap:break-word;white-space:pre-wrap'}
       </style>
       <div style={{ display: closed ? "none" : "block" }}>
         <div className="background" onClick={close} />
