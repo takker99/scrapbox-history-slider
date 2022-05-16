@@ -24,7 +24,7 @@
 .modal {
   position: relative;
   width: 80vw;
-  margin: 10px;
+  margin: 10px auto;
   max-height: calc(100vh - 20px);
   display: flex;
   flex-direction: column;
