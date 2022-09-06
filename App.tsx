@@ -48,6 +48,11 @@ const App = ({ getController }: Props) => {
   const close = useCallback(() => setClosed(true), []);
   const toggle = useCallback(() => setClosed((prev) => !prev), []);
   useEffect(() => getController({ open, close, toggle }), [getController]);
+  const handleClose = useCallback((e: MouseEvent) => {
+    if (!(e.target instanceof HTMLElement)) return;
+    if (e.target.id !== "background") return;
+    close();
+  }, []);
 
   const { state, result } = useAsync(
     async () => {
@@ -113,63 +118,62 @@ const App = ({ getController }: Props) => {
   return (
     <>
       <style>
-        {':host{color:var(--page-text-color, #4a4a4a)}.background{position:fixed;inset:0;outline:0;background-color:#000;opacity:.8;z-index:1040}.content{position:fixed;inset:0;outline:0;z-index:1050}.modal{position:relative;width:80vw;margin:10px auto;max-height:calc(100vh - 20px);display:flex;flex-direction:column}@media (min-width: 768px){.modal{margin:30px auto;max-height:calc(100vh - 60px)}}.container{width:100%;padding:5px;background-color:var(--page-bg, #fefefe);border-radius:4px;border:2px solid var(--body-bg, #dcdde0)}.modal>*{margin:.5em 0}.controller{display:flex;align-content:center}.controller>*{margin:auto 2px}input,.not-found{width:100%}.viewer{overflow-y:auto;overflow-x:hidden}pre{width:100%;font-family:var(--history-slider-pre-font, Menlo,Monaco,Consolas,"Courier New",monospace);word-break:break-all;word-wrap:break-word;white-space:pre-wrap}'}
+        {'.modal{position:fixed;inset:0;z-index:1050;background-color:#000c;display:flex;flex-direction:column;align-items:center;row-gap:10px;padding:10px}.closed{display:none}.modal>*{color:var(--page-text-color, #4a4a4a);background-color:var(--page-bg, #fefefe);border:2px solid var(--body-bg, #dcdde0);border-radius:4px;padding:5px;width:calc(var(--item-width, 100%) - 10px)}@media (min-width: 768px){.modal{padding:30px}}.controller{display:flex;flex-direction:row-reverse;gap:.2em}input{width:100%}time{white-space:nowrap}.viewer{overflow-y:scroll}pre{width:100%;font-family:var(--history-slider-pre-font, Menlo,Monaco,Consolas,"Courier New",monospace);word-break:break-all;word-wrap:break-word;white-space:pre-wrap}'}
       </style>
-      <div style={{ display: closed ? "none" : "block" }}>
-        <div className="background" onClick={close} />
-        <div className="content">
-          <div className="modal">
-            <div className="controller container">
-              {state === "resolved" && result.range.length === 0 && (
-                <span className="not-found">
-                  no history found.
-                </span>
-              )}
-              {state !== "rejected" && result.range.length > 0 &&
-                (
-                  <>
-                    <time
-                      dateTime={lightFormat(
-                        new Date(result.range[index] * 1000),
-                        "yyyy-MM-dd HH:mm:ss",
-                      )}
-                    >
-                      {lightFormat(
-                        new Date(result.range[index] * 1000),
-                        "yyyy-MM-dd HH:mm:ss",
-                      )}
-                    </time>
-                    <input
-                      type="range"
-                      max={max}
-                      min="0"
-                      step="1"
-                      value={index}
-                      title={lightFormat(
-                        new Date(result.range[index] * 1000),
-                        "yyyy-MM-dd HH:mm:ss",
-                      )}
-                      onInput={onSliderChange}
-                    />
-                  </>
-                )}
-              <button className="close-button" onClick={close}>x</button>
-            </div>
-            {state !== "rejected"
-              ? (
-                <div className="viewer container">
-                  <pre>
-                    {result.getSnapshot(result.range[index]).join("\n")}
-                  </pre>
-                </div>
-              )
-              : (
-                <div className="error container">
-                  {`Error: ${JSON.stringify(result)}`}
-                </div>
-              )}
-          </div>
+      <div
+        id="background"
+        className={`modal${closed ? " closed" : ""}`}
+        onClick={handleClose}
+      >
+        <div className="controller">
+          <button className="close-button" onClick={close}>x</button>
+          {state === "resolved" && result.range.length === 0 && (
+            <span className="not-found">
+              no history found.
+            </span>
+          )}
+          {state !== "rejected" && result.range.length > 0 &&
+            (
+              <>
+                <input
+                  type="range"
+                  max={max}
+                  min="0"
+                  step="1"
+                  value={index}
+                  title={lightFormat(
+                    new Date(result.range[index] * 1000),
+                    "yyyy-MM-dd HH:mm:ss",
+                  )}
+                  onInput={onSliderChange}
+                />
+                <time
+                  dateTime={lightFormat(
+                    new Date(result.range[index] * 1000),
+                    "yyyy-MM-dd HH:mm:ss",
+                  )}
+                >
+                  {lightFormat(
+                    new Date(result.range[index] * 1000),
+                    "yyyy-MM-dd HH:mm:ss",
+                  )}
+                </time>
+              </>
+            )}
         </div>
+        {state !== "rejected"
+          ? (
+            <div className="viewer">
+              <pre>
+                    {result.getSnapshot(result.range[index]).join("\n")}
+              </pre>
+            </div>
+          )
+          : (
+            <div className="error viewer">
+              {`Error: ${JSON.stringify(result)}`}
+            </div>
+          )}
       </div>
     </>
   );
