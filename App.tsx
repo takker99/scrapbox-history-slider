@@ -18,28 +18,36 @@ import { getCommitHistory, getPageHistory } from "./fetch.ts";
 import type { Scrapbox } from "./deps/scrapbox.ts";
 declare const scrapbox: Scrapbox;
 
-export type Controller = (
-  open: () => void,
-  close: () => void,
-) => (void | (() => void));
+export interface Controller {
+  open: () => void;
+  close: () => void;
+  toggle: () => void;
+}
 
-export const setup = (controller: Controller) => {
+export const setup = (projects: string[]): Promise<Controller> => {
   const app = document.createElement("div");
   app.dataset.userscriptName = "takker99/scrapbox-history-slider";
   const shadowRoot = app.attachShadow({ mode: "open" });
   document.body.append(app);
-  render(<App controller={controller} />, shadowRoot);
+  return new Promise(
+    (resolve) =>
+      render(
+        <App getController={(controller) => resolve(controller)} />,
+        shadowRoot,
+      ),
+  );
 };
 
 interface Props {
-  controller: Controller;
+  getController: (controller: Controller) => void;
 }
 
-const App = ({ controller }: Props) => {
+const App = ({ getController }: Props) => {
   const [closed, setClosed] = useState(true);
   const open = useCallback(() => setClosed(false), []);
   const close = useCallback(() => setClosed(true), []);
-  useEffect(() => controller(open, close), [controller]);
+  const toggle = useCallback(() => setClosed((prev) => !prev), []);
+  useEffect(() => getController({ open, close, toggle }), [getController]);
 
   const { state, result } = useAsync(
     async () => {
