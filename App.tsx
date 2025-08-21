@@ -1,12 +1,7 @@
-/// <reference no-default-lib="true" />
-/// <reference lib="esnext" />
-/// <reference lib="dom" />
-/** @jsx h */
-/** @jsxFrag Fragment */
-
+/** @jsxRuntime automatic */
+/** @jsxImportSource npm:preact@10 */
 import {
-  Fragment,
-  h,
+  type h,
   render,
   useCallback,
   useEffect,
@@ -14,7 +9,7 @@ import {
 } from "./deps/preact.tsx";
 import { lightFormat } from "./deps/date-fns.ts";
 import { useAsync } from "./useAsync.ts";
-import { getCommitHistory, getPageHistory } from "./fetch.ts";
+import { getCommitHistory } from "./fetch.ts";
 import type { Scrapbox } from "./deps/scrapbox.ts";
 declare const scrapbox: Scrapbox;
 
@@ -24,7 +19,7 @@ export interface Controller {
   toggle: () => void;
 }
 
-export const setup = (projects: string[]): Promise<Controller> => {
+export const setup = (): Promise<Controller> => {
   const app = document.createElement("div");
   app.dataset.userscriptName = "takker99/scrapbox-history-slider";
   const shadowRoot = app.attachShadow({ mode: "open" });
@@ -58,27 +53,16 @@ const App = ({ getController }: Props) => {
     async () => {
       if (closed) return;
       if (scrapbox.Layout !== "page") return;
-      const [commit, page] = await Promise.all([
-        getCommitHistory(
-          scrapbox.Project.name,
-          scrapbox.Page.id,
-        ),
-        getPageHistory(
-          scrapbox.Project.name,
-          scrapbox.Page.id,
-        ),
-      ]);
+      const commit = await getCommitHistory(
+        scrapbox.Project.name,
+        scrapbox.Page.id,
+      );
       return {
         /** 履歴連番 */
-        range: [...page.range, ...commit.range],
+        range: commit.range,
         /** 履歴連番に対応するテキストを得る関数*/
-        getSnapshot: (time: number): string[] => {
-          // 範囲外ならpageHistoryから取得する
-          if (!commit.range.includes(time)) {
-            return page.pages.get(time)?.map?.((line) => line.text) ?? [];
-          }
-
-          return commit.history.flatMap(({ snapshots }) => {
+        getSnapshot: (time: number): string[] =>
+          commit.history.flatMap(({ snapshots }) => {
             const line = snapshots.get(time);
             // lineが存在してtextが空なら、削除された行である
             if (line) return line.text === undefined ? [] : [line.text];
@@ -90,8 +74,7 @@ const App = ({ getController }: Props) => {
             if (prevUpdated === time) return [];
             const prevText = snapshots.get(prevUpdated)?.text;
             return prevText === undefined ? [] : [prevText];
-          });
-        },
+          }),
       };
     },
     { range: [], getSnapshot: () => [] },
@@ -126,7 +109,9 @@ const App = ({ getController }: Props) => {
         onClick={handleClose}
       >
         <div className="controller">
-          <button className="close-button" onClick={close}>x</button>
+          <button type="button" className="close-button" onClick={close}>
+            x
+          </button>
           {state === "resolved" && result.range.length === 0 && (
             <span className="not-found">
               no history found.

@@ -1,10 +1,10 @@
 .modal {
-  position:fixed;
-  inset:0;
-  z-index:1050;
-  
-  background-color:#000c;
-  
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+
+  background-color: #000c;
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -46,9 +46,15 @@ time {
 }
 pre {
   width: 100%;
-  font-family: var(--history-slider-pre-font, Menlo,Monaco,Consolas,"Courier New",monospace);
+  font-family: var(
+    --history-slider-pre-font,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Courier New",
+    monospace
+  );
   word-break: break-all;
   word-wrap: break-word;
   white-space: pre-wrap;
 }
-
