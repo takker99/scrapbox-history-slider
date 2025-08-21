@@ -131,6 +131,9 @@ export const makeSnapshots = (
     return snapshots;
   }
 
+  // Build history map for restoration purposes
+  const lineHistory = buildLineHistory(commits);
+
   // Start with current lines and work backwards through commits
   let currentLines = [...lines];
 
@@ -140,35 +143,109 @@ export const makeSnapshots = (
     snapshots.set(commit.created, [...currentLines]);
 
     // Apply reverse changes to get the state before this commit
-    currentLines = applyReverseChanges(currentLines, commit);
+    currentLines = applyReverseChanges(currentLines, commit, lineHistory);
   }
 
   return snapshots;
 };
 
 /**
+ * Line history entry for restoration
+ */
+interface LineHistoryEntry {
+  lineId: LineId;
+  type: "insert" | "update" | "delete";
+  text?: string;
+  origText?: string;
+  created: UnixTime;
+  userId: UserId;
+}
+
+/**
+ * Build history map to help with restoration of missing information
+ */
+function buildLineHistory(commits: Commit[]): Map<LineId, LineHistoryEntry[]> {
+  const history = new Map<LineId, LineHistoryEntry[]>();
+
+  // Process commits in chronological order (oldest first) to build history
+  const chronologicalCommits = [...commits].reverse();
+
+  for (const commit of chronologicalCommits) {
+    for (const change of commit.changes) {
+      let entry: LineHistoryEntry | null = null;
+
+      if ("_insert" in change) {
+        entry = {
+          lineId: change.lines.id,
+          type: "insert",
+          text: change.lines.text,
+          created: commit.created,
+          userId: commit.userId,
+        };
+      } else if ("_update" in change) {
+        entry = {
+          lineId: change._update,
+          type: "update",
+          text: change.lines.text,
+          origText: change.lines.origText,
+          created: commit.created,
+          userId: commit.userId,
+        };
+      } else if ("_delete" in change) {
+        entry = {
+          lineId: change._delete,
+          type: "delete",
+          created: commit.created,
+          userId: commit.userId,
+        };
+      }
+
+      if (entry) {
+        if (!history.has(entry.lineId)) {
+          history.set(entry.lineId, []);
+        }
+        history.get(entry.lineId)!.push(entry);
+      }
+    }
+  }
+
+  return history;
+}
+
+/**
  * Apply changes in reverse to get the previous state
  */
-function applyReverseChanges(lines: BaseLine[], commit: Commit): BaseLine[] {
+function applyReverseChanges(
+  lines: BaseLine[],
+  commit: Commit,
+  lineHistory: Map<LineId, LineHistoryEntry[]>,
+): BaseLine[] {
   let result = [...lines];
 
   // Process changes in reverse order since we're working backwards
   for (let i = commit.changes.length - 1; i >= 0; i--) {
     const change = commit.changes[i];
-    result = applyReverseChange(result, change, commit.userId, commit.created);
+    result = applyReverseChange(
+      result,
+      change,
+      commit.userId,
+      commit.created,
+      lineHistory,
+    );
   }
 
   return result;
 }
 
 /**
- * Apply a single change in reverse
+ * Apply a single change in reverse with enhanced restoration
  */
 function applyReverseChange(
   lines: BaseLine[],
   change: Change,
   userId: UserId,
   created: UnixTime,
+  lineHistory: Map<LineId, LineHistoryEntry[]>,
 ): BaseLine[] {
   if ("_insert" in change) {
     // Reverse of insert is delete - remove the line that was inserted
@@ -180,10 +257,13 @@ function applyReverseChange(
     const lineIndex = lines.findIndex((line) => line.id === change._update);
     if (lineIndex >= 0) {
       const updatedLines = [...lines];
+      const restoredTimestamps = restoreTimestamps(change._update, created, lineHistory);
+      
       updatedLines[lineIndex] = {
         ...updatedLines[lineIndex],
         text: change.lines.origText, // Use the original text from the change
-        updated: created - 1, // Make it slightly older
+        created: restoredTimestamps.created,
+        updated: restoredTimestamps.updated,
       };
       return updatedLines;
     }
@@ -191,18 +271,86 @@ function applyReverseChange(
   }
 
   if ("_delete" in change) {
-    // Reverse of delete is insert - add back the deleted line with dummy content
-    const dummyLine: BaseLine = {
+    // Reverse of delete - try to restore the original content and timestamps
+    const restoredContent = restoreDeletedContent(change._delete, created, lineHistory);
+    const restoredTimestamps = restoreTimestamps(change._delete, created, lineHistory);
+    
+    const restoredLine: BaseLine = {
       id: change._delete,
-      text: "[deleted line - content unknown]", // Dummy content since we can't restore it
-      userId,
-      created: created - 1, // Make it slightly older
-      updated: created - 1,
+      text: restoredContent,
+      userId: restoredTimestamps.userId || userId,
+      created: restoredTimestamps.created,
+      updated: restoredTimestamps.updated,
     };
 
     // Insert at the end since we don't know original position
-    return [...lines, dummyLine];
+    return [...lines, restoredLine];
   }
 
   return lines;
+}
+
+/**
+ * Restore deleted content by looking for previous changes on the same lineId
+ */
+function restoreDeletedContent(
+  lineId: LineId,
+  beforeTime: UnixTime,
+  lineHistory: Map<LineId, LineHistoryEntry[]>,
+): string {
+  const history = lineHistory.get(lineId);
+  if (!history) {
+    return "[deleted line - content unknown]";
+  }
+
+  // Find the most recent change before the delete time that has text
+  for (let i = history.length - 1; i >= 0; i--) {
+    const entry = history[i];
+    if (entry.created < beforeTime && (entry.type === "insert" || entry.type === "update")) {
+      return entry.text || "[deleted line - content unknown]";
+    }
+  }
+
+  return "[deleted line - content unknown]";
+}
+
+/**
+ * Restore timestamps by looking for the original insert and most recent update
+ */
+function restoreTimestamps(
+  lineId: LineId,
+  beforeTime: UnixTime,
+  lineHistory: Map<LineId, LineHistoryEntry[]>,
+): { created: UnixTime; updated: UnixTime; userId?: UserId } {
+  const history = lineHistory.get(lineId);
+  if (!history) {
+    return {
+      created: beforeTime - 1,
+      updated: beforeTime - 1,
+    };
+  }
+
+  let created = beforeTime - 1;
+  let updated = beforeTime - 1;
+  let userId: UserId | undefined;
+
+  // Find the original insert (created timestamp)
+  for (const entry of history) {
+    if (entry.type === "insert" && entry.created < beforeTime) {
+      created = entry.created;
+      userId = entry.userId;
+      break; // First insert is the creation
+    }
+  }
+
+  // Find the most recent update before the current change
+  for (let i = history.length - 1; i >= 0; i--) {
+    const entry = history[i];
+    if (entry.created < beforeTime && (entry.type === "insert" || entry.type === "update")) {
+      updated = entry.created;
+      break;
+    }
+  }
+
+  return { created, updated, userId };
 }

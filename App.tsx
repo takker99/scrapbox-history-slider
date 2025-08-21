@@ -55,24 +55,20 @@ const App = ({ getController }: Props) => {
       if (closed) return;
       if (scrapbox.Layout !== "page") return;
 
-      // Get current page lines
-      const pageRes = await getPage(
-        scrapbox.Project.name,
-        scrapbox.Page.title || "",
-      );
+      // Get current page lines and commits simultaneously
+      const [pageRes, commitsRes] = await Promise.all([
+        getPage(scrapbox.Project.name, scrapbox.Page.title || ""),
+        getCommits(scrapbox.Project.name, scrapbox.Page.id),
+      ]);
+
       if (!pageRes.ok) {
         throw new Error(`Failed to fetch page: ${pageRes.statusText}`);
       }
-      const pageData = await pageRes.json();
-
-      // Get commits
-      const commitsRes = await getCommits(
-        scrapbox.Project.name,
-        scrapbox.Page.id,
-      );
       if (!commitsRes.ok) {
         throw new Error(`Failed to fetch commits: ${commitsRes.statusText}`);
       }
+
+      const pageData = await pageRes.json();
       const commitsData = await commitsRes.json();
 
       // Create snapshots using new function
@@ -83,10 +79,8 @@ const App = ({ getController }: Props) => {
         /** 履歴連番 */
         range: timestamps,
         /** 履歴連番に対応するテキストを得る関数*/
-        getSnapshot: (time: number): string[] => {
-          const lines = snapshots.get(time);
-          return lines ? lines.map((line) => line.text) : [];
-        },
+        getSnapshot: (time: number): string[] =>
+          snapshots.get(time)?.map?.((line) => line.text) ?? [],
       };
     },
     { range: [], getSnapshot: () => [] },
