@@ -1,29 +1,16 @@
-import { convert, LineSnapShot } from "./convert.ts";
-import type { CommitsResponse, PageSnapshot } from "./deps/scrapbox.ts";
+import { convert, type LineSnapShot } from "./convert.ts";
+import { getCommits } from "./deps/scrapbox.ts";
 
 export const getCommitHistory = async (
   project: string,
   pageId: string,
 ): Promise<{ range: number[]; history: LineSnapShot[] }> => {
-  const res = await fetch(
-    `/api/commits/${project}/${pageId}`,
-  );
-  const { commits } = (await res.json()) as CommitsResponse;
-  return convert(commits);
-};
-
-export const getPageHistory = async (
-  project: string,
-  pageId: string,
-) => {
-  const res = await fetch(
-    `/api/page-snapshots/${project}/${pageId}`,
-  );
-  const { snapshots } = (await res.json()) as PageSnapshot;
-
-  const pages = new Map(
-    snapshots.map(({ lines, created }) => [created, lines]),
-  );
-  const range = snapshots.map(({ created }) => created).sort();
-  return { pages, range };
+  const res = await getCommits(project, pageId);
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch commits for ${project}/${pageId}: ${res.statusText}`,
+      { cause: res },
+    );
+  }
+  return convert((await res.json()).commits);
 };
