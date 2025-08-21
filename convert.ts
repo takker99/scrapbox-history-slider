@@ -1,4 +1,5 @@
 import type {
+  BaseLine,
   Change,
   Commit,
   LineId,
@@ -112,3 +113,96 @@ const makeChangeInfo = (change: Change, userId: UserId, created: UnixTime) => {
   }
   return;
 };
+
+/**
+ * Creates snapshots for all timestamps by working backwards from current lines
+ *
+ * @param lines Current lines of the page
+ * @param commits Commits ordered from newest to oldest
+ * @returns Map with unix timestamps as keys and line arrays as values
+ */
+export const makeSnapshots = (
+  lines: BaseLine[],
+  commits: Commit[],
+): Map<UnixTime, BaseLine[]> => {
+  const snapshots = new Map<UnixTime, BaseLine[]>();
+
+  if (commits.length === 0) {
+    return snapshots;
+  }
+
+  // Start with current lines and work backwards through commits
+  let currentLines = [...lines];
+
+  // Work backwards through each commit (commits are newest to oldest)
+  for (const commit of commits) {
+    // Record the state at this commit's timestamp (before applying reverse)
+    snapshots.set(commit.created, [...currentLines]);
+
+    // Apply reverse changes to get the state before this commit
+    currentLines = applyReverseChanges(currentLines, commit);
+  }
+
+  return snapshots;
+};
+
+/**
+ * Apply changes in reverse to get the previous state
+ */
+function applyReverseChanges(lines: BaseLine[], commit: Commit): BaseLine[] {
+  let result = [...lines];
+
+  // Process changes in reverse order since we're working backwards
+  for (let i = commit.changes.length - 1; i >= 0; i--) {
+    const change = commit.changes[i];
+    result = applyReverseChange(result, change, commit.userId, commit.created);
+  }
+
+  return result;
+}
+
+/**
+ * Apply a single change in reverse
+ */
+function applyReverseChange(
+  lines: BaseLine[],
+  change: Change,
+  userId: UserId,
+  created: UnixTime,
+): BaseLine[] {
+  if ("_insert" in change) {
+    // Reverse of insert is delete - remove the line that was inserted
+    return lines.filter((line) => line.id !== change.lines.id);
+  }
+
+  if ("_update" in change) {
+    // Reverse of update - restore the original text
+    const lineIndex = lines.findIndex((line) => line.id === change._update);
+    if (lineIndex >= 0) {
+      const updatedLines = [...lines];
+      updatedLines[lineIndex] = {
+        ...updatedLines[lineIndex],
+        text: change.lines.origText, // Use the original text from the change
+        updated: created - 1, // Make it slightly older
+      };
+      return updatedLines;
+    }
+    return lines;
+  }
+
+  if ("_delete" in change) {
+    // Reverse of delete is insert - add back the deleted line with dummy content
+    const dummyLine: BaseLine = {
+      id: change._delete,
+      text: "[deleted line - content unknown]", // Dummy content since we can't restore it
+      userId,
+      created: created - 1, // Make it slightly older
+      updated: created - 1,
+    };
+
+    // Insert at the end since we don't know original position
+    return [...lines, dummyLine];
+  }
+
+  return lines;
+}

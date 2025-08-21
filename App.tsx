@@ -9,7 +9,8 @@ import {
 } from "./deps/preact.tsx";
 import { lightFormat } from "./deps/date-fns.ts";
 import { useAsync } from "./useAsync.ts";
-import { getCommitHistory } from "./fetch.ts";
+import { makeSnapshots } from "./convert.ts";
+import { getCommits, getPage } from "./deps/scrapbox.ts";
 import type { Scrapbox } from "./deps/scrapbox.ts";
 declare const scrapbox: Scrapbox;
 
@@ -53,28 +54,39 @@ const App = ({ getController }: Props) => {
     async () => {
       if (closed) return;
       if (scrapbox.Layout !== "page") return;
-      const commit = await getCommitHistory(
+
+      // Get current page lines
+      const pageRes = await getPage(
+        scrapbox.Project.name,
+        scrapbox.Page.title || "",
+      );
+      if (!pageRes.ok) {
+        throw new Error(`Failed to fetch page: ${pageRes.statusText}`);
+      }
+      const pageData = await pageRes.json();
+
+      // Get commits
+      const commitsRes = await getCommits(
         scrapbox.Project.name,
         scrapbox.Page.id,
       );
+      if (!commitsRes.ok) {
+        throw new Error(`Failed to fetch commits: ${commitsRes.statusText}`);
+      }
+      const commitsData = await commitsRes.json();
+
+      // Create snapshots using new function
+      const snapshots = makeSnapshots(pageData.lines, commitsData.commits);
+      const timestamps = Array.from(snapshots.keys()).sort((a, b) => a - b); // Sort ascending for range
+
       return {
         /** 履歴連番 */
-        range: commit.range,
+        range: timestamps,
         /** 履歴連番に対応するテキストを得る関数*/
-        getSnapshot: (time: number): string[] =>
-          commit.history.flatMap(({ snapshots }) => {
-            const line = snapshots.get(time);
-            // lineが存在してtextが空なら、削除された行である
-            if (line) return line.text === undefined ? [] : [line.text];
-
-            // 一つ前の履歴を探し出す
-            const prevUpdated = Math.max(
-              ...[...snapshots.keys()].filter((updated) => updated < time),
-            );
-            if (prevUpdated === time) return [];
-            const prevText = snapshots.get(prevUpdated)?.text;
-            return prevText === undefined ? [] : [prevText];
-          }),
+        getSnapshot: (time: number): string[] => {
+          const lines = snapshots.get(time);
+          return lines ? lines.map((line) => line.text) : [];
+        },
       };
     },
     { range: [], getSnapshot: () => [] },
