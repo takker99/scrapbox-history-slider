@@ -1,8 +1,5 @@
-import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { makeSnapshots } from "./convert.ts";
+import { assertEquals, assertExists } from "./deps/assert.ts";
 import type { BaseLine, Commit } from "./deps/scrapbox.ts";
 
 Deno.test("makeSnapshots - empty inputs", () => {
