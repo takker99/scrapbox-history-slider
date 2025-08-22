@@ -68,12 +68,14 @@ const App = ({ getController }: Props) => {
         throw new Error(`Failed to fetch commits: ${commitsRes.statusText}`);
       }
 
-      const pageData = await pageRes.json();
-      const commitsData = await commitsRes.json();
+      const [pageData, commitsData] = await Promise.all([
+        pageRes.json(),
+        commitsRes.json(),
+      ]);
 
       // Create snapshots using new function
       const snapshots = makeSnapshots(pageData.lines, commitsData.commits);
-      const timestamps = Array.from(snapshots.keys()).sort((a, b) => a - b); // Sort ascending for range
+      const timestamps = [...snapshots.keys()].sort((a, b) => a - b); // Sort ascending for range
 
       return {
         /** 履歴連番 */

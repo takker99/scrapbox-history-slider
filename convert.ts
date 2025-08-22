@@ -9,13 +9,11 @@ import type { BaseLine, Commit, UnixTime } from "./deps/scrapbox.ts";
  */
 export const makeSnapshots = (
   lines: BaseLine[],
-  commits: Commit[],
+  commits: readonly Commit[],
 ): Map<UnixTime, BaseLine[]> => {
   const snapshots = new Map<UnixTime, BaseLine[]>();
 
-  if (commits.length === 0) {
-    return snapshots;
-  }
+  if (commits.length === 0) return snapshots;
 
   // Start with current lines and work backwards through commits
   let currentLines = [...lines];
