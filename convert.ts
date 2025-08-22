@@ -144,41 +144,52 @@ export const makeSnapshots = (
       if ("_insert" in change) {
         // Reverse of insert - remove the line, but first check if any line with dummy content can be restored
         const insertedLineId = change.lines.id;
-        
+
         // Check if any existing line has dummy content for this lineId
-        const dummyLineIndex = currentLines.findIndex(line => 
-          line.id === insertedLineId && line.text === "[deleted line - content unknown]"
+        const insertedLine = currentLines.find((line) =>
+          line.id === insertedLineId
         );
-        
-        if (dummyLineIndex !== -1) {
-          // Found a line with dummy content - restore it in-place
-          const dummyLine = currentLines[dummyLineIndex];
-          dummyLine.text = change.lines.text;
-          dummyLine.created = commit.created;
-          dummyLine.updated = commit.created;
-          dummyLine.userId = commit.userId;
+
+        let wasRestored = false;
+        if (insertedLine && insertedLine.text === "-1") {
+          // Restore it in-place
+          insertedLine.text = change.lines.text;
+          for (const lines of snapshots.values()) {
+            const futureLine = lines.find((line) => line.id === insertedLineId);
+            if (!futureLine) continue;
+            futureLine.created = commit.created;
+          }
+          insertedLine.updated = commit.created;
+          insertedLine.userId = commit.userId;
+          wasRestored = true;
         }
-        
-        // Remove the inserted line (it didn't exist before this commit)
-        currentLines = currentLines.filter(line => line.id !== change.lines.id);
+
+        // Remove the inserted line only if it wasn't a restoration (it didn't exist before this commit)
+        if (!wasRestored) {
+          currentLines = currentLines.filter((line) =>
+            line.id !== change.lines.id
+          );
+        }
       } else if ("_update" in change) {
         // Reverse of update - revert to original text
-        const lineIndex = currentLines.findIndex(line => line.id === change._update);
+        const lineIndex = currentLines.findIndex((line) =>
+          line.id === change._update
+        );
         if (lineIndex !== -1) {
-          const line = currentLines[lineIndex];
+          const updatedLine = currentLines[lineIndex];
           // Check if this line currently has dummy content from a previous delete
-          if (line.text === "[deleted line - content unknown]") {
+          if (updatedLine.text === "-1") {
             // This line was previously deleted, restore its content in-place
             // This will update all snapshots that reference this line object
-            line.text = change.lines.origText || change.lines.text;
-            line.updated = commit.created;
-            // Keep the original created timestamp and userId as they come from the original insert
+            updatedLine.text = change.lines.text;
+            updatedLine.updated = commit.created;
+            updatedLine.userId = commit.userId;
           } else {
             // Normal update revert - create new line object to avoid affecting other snapshots
             currentLines[lineIndex] = {
-              ...line,
-              text: change.lines.origText || change.lines.text,
-              updated: commit.created,
+              ...updatedLine,
+              text: change.lines.origText,
+              updated: -1, // dummy timestamp
             };
           }
         }
@@ -186,10 +197,10 @@ export const makeSnapshots = (
         // Reverse of delete - add the line back with dummy content initially
         const restoredLine: BaseLine = {
           id: change._delete,
-          text: "[deleted line - content unknown]",
-          userId: commit.userId,
-          created: commit.created - 1, // Dummy timestamp, will be corrected when we find the original insert
-          updated: commit.created - 1,
+          text: "-1", // dummy text
+          userId: "-1", // Dummy user id
+          created: -1, // Dummy timestamp, will be corrected when we find the original insert
+          updated: -1, // Dummy timestamp, will be corrected when we find the original insert
         };
         // Insert at the end since we don't know original position
         currentLines.push(restoredLine);
@@ -199,5 +210,3 @@ export const makeSnapshots = (
 
   return snapshots;
 };
-
-
