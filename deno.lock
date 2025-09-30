@@ -2,37 +2,26 @@
   "version": "5",
   "specifiers": {
     "jsr:@core/iterutil@0.9": "0.9.0",
-    "jsr:@core/unknownutil@4": "4.3.0",
-    "jsr:@cosense/std@0.30": "0.30.1",
-    "jsr:@cosense/std@0.30.2": "0.30.2",
-    "jsr:@cosense/std@~0.30.2": "0.30.2",
-    "jsr:@cosense/types@0.11": "0.11.2",
-    "jsr:@cosense/types@~0.11.2": "0.11.2",
-    "jsr:@progfay/scrapbox-parser@^10.0.1": "10.0.1",
+    "jsr:@cosense/std@0.31": "0.31.0",
+    "jsr:@cosense/types@0.11": "0.11.3",
+    "jsr:@cosense/types@~0.11.3": "0.11.3",
     "jsr:@std/async@^1.0.14": "1.0.14",
-    "jsr:@std/encoding@1": "1.0.10",
-    "jsr:@std/http@^1.0.13": "1.0.20",
-    "jsr:@std/json@1": "1.0.2",
-    "jsr:@std/streams@^1.0.9": "1.0.11",
-    "jsr:@std/testing@^1.0.9": "1.0.15",
-    "jsr:@takker/md5@0.1": "0.1.0",
+    "jsr:@std/http@^1.0.20": "1.0.20",
+    "jsr:@std/json@^1.0.2": "1.0.2",
+    "jsr:@std/testing@^1.0.15": "1.0.15",
     "npm:date-fns@4": "4.1.0",
     "npm:option-t@53": "53.0.0",
-    "npm:preact@10": "10.27.0",
-    "npm:socket.io-client@^4.7.5": "4.8.1"
+    "npm:preact@10": "10.27.2"
   },
   "jsr": {
     "@core/iterutil@0.9.0": {
       "integrity": "29a4ba1af8e79c2d63d96df4948bb995afb5256568401711ae97a1ef06cc67a8"
     },
-    "@core/unknownutil@4.3.0": {
-      "integrity": "538a3687ffa81028e91d148818047df219663d0da671d906cecd165581ae55cc"
-    },
-    "@cosense/std@0.30.1": {
-      "integrity": "62b196532d5ba17327c8cd459d155a46a48093a91ccc01345b467ebe651b02c2",
+    "@cosense/std@0.31.0": {
+      "integrity": "8d598c3deb4024b14afabf6d516ca8864c90d74cb1609040161320c2981c04c6",
       "dependencies": [
         "jsr:@core/iterutil",
-        "jsr:@cosense/types@~0.11.2",
+        "jsr:@cosense/types@~0.11.3",
         "jsr:@std/async",
         "jsr:@std/http",
         "jsr:@std/json",
@@ -40,110 +29,31 @@
         "npm:option-t"
       ]
     },
-    "@cosense/std@0.30.2": {
-      "integrity": "51040713174cc19ed8ab2621b3b5818e2e9e573dc80c4f3c43f1aed6b9bd02aa",
-      "dependencies": [
-        "jsr:@core/iterutil",
-        "jsr:@core/unknownutil",
-        "jsr:@cosense/types@~0.11.2",
-        "jsr:@progfay/scrapbox-parser",
-        "jsr:@std/async",
-        "jsr:@std/encoding",
-        "jsr:@std/http",
-        "jsr:@std/json",
-        "jsr:@std/testing",
-        "jsr:@takker/md5",
-        "npm:option-t",
-        "npm:socket.io-client"
-      ]
-    },
-    "@cosense/types@0.11.2": {
-      "integrity": "2aefb44f9e39af2c233ea1f2af62934980e3632b02df1a462fa43b058893b756"
-    },
-    "@progfay/scrapbox-parser@10.0.1": {
-      "integrity": "5b3983ef2cebe5c6b3f0bfb9f5a8a0d1e992f3d2de44e560bfe0628a8344eef1"
+    "@cosense/types@0.11.3": {
+      "integrity": "de9af0bcf40978cb9ef5a2120971f6d1fc26f19ce4132aa938445ff2f00f514c"
     },
     "@std/async@1.0.14": {
       "integrity": "62e954a418652c704d37563a3e54a37d4cf0268a9dcaeac1660cc652880b5326"
-    },
-    "@std/encoding@1.0.10": {
-      "integrity": "8783c6384a2d13abd5e9e87a7ae0520a30e9f56aeeaa3bdf910a3eaaf5c811a1"
     },
     "@std/http@1.0.20": {
       "integrity": "b5cc33fc001bccce65ed4c51815668c9891c69ccd908295997e983d8f56070a1"
     },
     "@std/json@1.0.2": {
-      "integrity": "d9e5497801c15fb679f55a2c01c7794ad7a5dfda4dd1bebab5e409cb5e0d34d4",
-      "dependencies": [
-        "jsr:@std/streams"
-      ]
-    },
-    "@std/streams@1.0.11": {
-      "integrity": "db583d27e28d133f389f1eec318cffdf4998305e5134c1d4b1c56b361cee6018"
+      "integrity": "d9e5497801c15fb679f55a2c01c7794ad7a5dfda4dd1bebab5e409cb5e0d34d4"
     },
     "@std/testing@1.0.15": {
       "integrity": "a490169f5ccb0f3ae9c94fbc69d2cd43603f2cffb41713a85f99bbb0e3087cbc"
-    },
-    "@takker/md5@0.1.0": {
-      "integrity": "4c423d8247aadf7bcb1eb83c727bf28c05c21906e916517395d00aa157b6eae0"
     }
   },
   "npm": {
-    "@socket.io/component-emitter@3.1.2": {
-      "integrity": "sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA=="
-    },
     "date-fns@4.1.0": {
       "integrity": "sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg=="
-    },
-    "debug@4.3.7": {
-      "integrity": "sha512-Er2nc/H7RrMXZBFCEim6TCmMk02Z8vLC2Rbi1KEBggpo0fS6l0S1nnapwmIi3yW/+GOJap1Krg4w0Hg80oCqgQ==",
-      "dependencies": [
-        "ms"
-      ]
-    },
-    "engine.io-client@6.6.3": {
-      "integrity": "sha512-T0iLjnyNWahNyv/lcjS2y4oE358tVS/SYQNxYXGAJ9/GLgH4VCvOQ/mhTjqU88mLZCQgiG8RIegFHYCdVC+j5w==",
-      "dependencies": [
-        "@socket.io/component-emitter",
-        "debug",
-        "engine.io-parser",
-        "ws",
-        "xmlhttprequest-ssl"
-      ]
-    },
-    "engine.io-parser@5.2.3": {
-      "integrity": "sha512-HqD3yTBfnBxIrbnM1DoD6Pcq8NECnh8d4As1Qgh0z5Gg3jRRIqijury0CL3ghu/edArpUYiYqQiDUQBIs4np3Q=="
-    },
-    "ms@2.1.3": {
-      "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="
     },
     "option-t@53.0.0": {
       "integrity": "sha512-qsyo1cFXfUN1MVnxTrpcy+V4tJYEBvEQmeiDkC6m5W/V2JiNfs4V/qXmDGZg4k9XRR1EWkv3jT8TXSZnhGPBLA=="
     },
-    "preact@10.27.0": {
-      "integrity": "sha512-/DTYoB6mwwgPytiqQTh/7SFRL98ZdiD8Sk8zIUVOxtwq4oWcwrcd1uno9fE/zZmUaUrFNYzbH14CPebOz9tZQw=="
-    },
-    "socket.io-client@4.8.1": {
-      "integrity": "sha512-hJVXfu3E28NmzGk8o1sHhN3om52tRvwYeidbj7xKy2eIIse5IoKX3USlS6Tqt3BHAtflLIkCQBkzVrEEfWUyYQ==",
-      "dependencies": [
-        "@socket.io/component-emitter",
-        "debug",
-        "engine.io-client",
-        "socket.io-parser"
-      ]
-    },
-    "socket.io-parser@4.2.4": {
-      "integrity": "sha512-/GbIKmo8ioc+NIWIhwdecY0ge+qVBSMdgxGygevmdHj24bsfgtCmcUUcQ5ZzcylGFHsN3k4HB4Cgkl96KVnuew==",
-      "dependencies": [
-        "@socket.io/component-emitter",
-        "debug"
-      ]
-    },
-    "ws@8.17.1": {
-      "integrity": "sha512-6XQFvXTkbfUOZOKKILFG1PDK2NDQs4azKQl26T0YS5CxqWLgXajbPZ+h4gZekJyRqFU8pvnbAbbs/3TgRPy+GQ=="
-    },
-    "xmlhttprequest-ssl@2.1.2": {
-      "integrity": "sha512-TEU+nJVUUnA4CYJFLvK5X9AOeH4KvDvhIfm0vV1GaQRtchnG0hgK5p8hw/xjv8cunWYCsiPCSDzObPyhEwq3KQ=="
+    "preact@10.27.2": {
+      "integrity": "sha512-5SYSgFKSyhCbk6SrXyMpqjb5+MQBgfvEKE/OC+PujcY34sOpqtr+0AZQtPYx5IA6VxynQ7rUPCtKzyovpj9Bpg=="
     }
   }
 }
